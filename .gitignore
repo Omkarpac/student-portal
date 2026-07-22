@@ -1,0 +1,19 @@
+# Dependencies — thousands of files, fully regenerable with `npm install`
+node_modules/
+
+# Secrets — database passwords and API keys live here. NEVER commit this.
+.env
+.env.local
+
+# Build output — generated from source, not source itself
+dist/
+build/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor / OS clutter
+.vscode/
+.DS_Store
+Thumbs.db
