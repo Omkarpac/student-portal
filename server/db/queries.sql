@@ -13,7 +13,7 @@ USE student_portal;
 -- parameter, which prevents SQL injection (see Day 9).
 -- ═══════════════════════════════════════════════════════════
 SELECT
-    sub.id                  AS subject_id,
+    sub.sub_id                  AS subject_id,
     sub.code                AS subject_code,
     sub.name                AS subject_name,
     ed.exam_date,
@@ -21,8 +21,8 @@ SELECT
 FROM students s
 JOIN student_subjects ss ON ss.student_id = s.id
 JOIN subjects sub        ON sub.id        = ss.subject_id
-LEFT JOIN exam_dates ed  ON ed.subject_id = sub.id
-WHERE s.id = ?
+LEFT JOIN exam_dates ed  ON ed.subject_id = sub.sub_id
+WHERE s.id = 1
 ORDER BY ed.exam_date;
 
 -- ═══════════════════════════════════════════════════════════

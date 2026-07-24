@@ -1,0 +1,19 @@
+{
+  "name": "student-portal-server",
+  "version": "1.0.0",
+  "description": "REST API for the Student Portal",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "author": "Omkar Pachore",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}
