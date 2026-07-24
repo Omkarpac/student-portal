@@ -2,6 +2,8 @@
 // Student Portal API — server entry point
 // ─────────────────────────────────────────────────────────
 import express from 'express';
+import dotenv from 'dotenv';
+import pool from './db.js';   
 
 // Create the application object. `app` is your server:
 // you attach routes to it, then tell it to listen.
@@ -47,8 +49,19 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// ── START LISTENING ───────────────────────────────────────
-// Until this runs, the app exists but accepts nothing.
-app.listen(PORT, () => {
+// ── STARTUP DATABASE CHECK ────────────────────────────────
+// Prove the DB works at boot, so a misconfiguration fails
+// loudly NOW rather than mysteriously on the first request.
+async function testDatabaseConnection() {
+  try {
+    const [rows] = await pool.query('SELECT COUNT(*) AS count FROM students');
+    console.log(`✓ Database connected — ${rows[0].count} students found`);
+  } catch (err) {
+    console.error('✗ Database connection failed:', err.message);
+    process.exit(1);   // exit with a failure code — don't run a broken server
+  }
+}
+app.listen(PORT, async () => {
   console.log(`✓ Server running at http://localhost:${PORT}`);
+  await testDatabaseConnection();  
 });

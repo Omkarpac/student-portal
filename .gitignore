@@ -1,5 +1,5 @@
 # Dependencies — thousands of files, fully regenerable with `npm install`
-node_modules/
+node_modules
 
 # Secrets — database passwords and API keys live here. NEVER commit this.
 .env
