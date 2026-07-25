@@ -65,3 +65,15 @@ app.listen(PORT, async () => {
   console.log(`✓ Server running at http://localhost:${PORT}`);
   await testDatabaseConnection();  
 });
+// GET /api/students — return all students
+app.get('/api/students', async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      'SELECT id, name, email, enrolled_year FROM students ORDER BY name'
+    );
+    res.json(rows);                    // send the array as JSON
+  } catch (err) {
+    console.error('GET /api/students failed:', err.message);
+    res.status(500).json({ error: 'Failed to fetch students' });
+  }
+});
