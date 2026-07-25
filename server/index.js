@@ -77,3 +77,48 @@ app.get('/api/students', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch students' });
   }
 });
+// GET /api/students/:id/subjects
+// Returns one student's subjects with their exam dates.
+// :id is a URL PARAMETER — a placeholder in the path.
+app.get('/api/students/:id/subjects', async (req, res) => {
+  const studentId = req.params.id;   // pull ":id" from the URL
+
+  try {
+    // First: does this student exist? (So we can 404 correctly.)
+    const [students] = await pool.query(
+      'SELECT id, name FROM students WHERE id = ?',
+      [studentId]
+    );
+
+    if (students.length === 0) {
+      return res.status(404).json({ error: 'Student not found' });
+    }
+
+    // The core JOIN from Day 5 — note the ? placeholder.
+    const [subjects] = await pool.query(
+      `SELECT
+      sub.sub_id                  AS subject_id,
+      sub.code                AS subject_code,
+      sub.name                AS subject_name,
+      ed.exam_date,
+      ed.location
+      FROM students s
+      JOIN student_subjects ss ON ss.student_id = s.id
+      JOIN subjects sub        ON sub.sub_id        = ss.sub_id
+      LEFT JOIN exam_dates ed  ON ed.sub_id = sub.sub_id
+      WHERE s.id = 1
+      ORDER BY ed.exam_date;`,
+      [studentId]
+    );
+
+    // Return the student plus their subjects, together.
+    res.json({
+      student: students[0],
+      subjects: subjects
+    });
+
+  } catch (err) {
+    console.error('GET /api/students/:id/subjects failed:', err.message);
+    res.status(500).json({ error: 'Failed to fetch subjects' });
+  }
+});

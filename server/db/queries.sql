@@ -20,8 +20,8 @@ SELECT
     ed.location
 FROM students s
 JOIN student_subjects ss ON ss.student_id = s.id
-JOIN subjects sub        ON sub.id        = ss.subject_id
-LEFT JOIN exam_dates ed  ON ed.subject_id = sub.sub_id
+JOIN subjects sub        ON sub.sub_id        = ss.sub_id
+LEFT JOIN exam_dates ed  ON ed.sub_id = sub.sub_id
 WHERE s.id = 1
 ORDER BY ed.exam_date;
 
