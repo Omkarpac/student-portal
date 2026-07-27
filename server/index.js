@@ -4,6 +4,7 @@
 // The actual route logic lives in routes/.
 // ─────────────────────────────────────────────────────────
 import express from 'express';
+import cors from 'cors'; 
 import dotenv from 'dotenv';
 import pool from './db.js';
 import studentsRouter from './routes/students.js';
@@ -15,6 +16,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // ── Middleware ──
+app.use(cors()); 
 app.use(express.json());
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.url}`);
@@ -44,7 +46,20 @@ async function testDatabaseConnection() {
     process.exit(1);
   }
 }
+// ── 404 handler — no route matched ──
+// A normal middleware with no path runs when nothing above matched.
+app.use((req, res) => {
+  res.status(404).json({ error: 'Route not found' });
+});
 
+// ── Centralized error handler — FOUR args marks it as one ──
+// Any route that calls next(err) lands here.
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err.message);
+  res.status(err.status || 500).json({
+    error: err.message || 'Internal server error'
+  });
+});
 app.listen(PORT, async () => {
   console.log(`✓ Server running at http://localhost:${PORT}`);
   await testDatabaseConnection();

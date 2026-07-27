@@ -39,7 +39,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // GET /api/students/:id/subjects  →  here it's '/:id/subjects'
-router.get('/:id/subjects', async (req, res) => {
+router.get('/:id/subjects', async (req, res,next) => {
   const studentId = req.params.id;
   try {
     const [students] = await pool.query(
@@ -66,8 +66,7 @@ router.get('/:id/subjects', async (req, res) => {
     );
     res.json({ student: students[0], subjects });
   } catch (err) {
-    console.error('GET /api/students/:id/subjects failed:', err.message);
-    res.status(500).json({ error: 'Failed to fetch subjects' });
+        next(err);
   }
 });
 
