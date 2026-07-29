@@ -10,3 +10,15 @@ header {
   margin-bottom: 1rem;
 }
 h1 { color: #9fc3fa; margin-bottom: 0.25rem; }
+.student-list { list-style: none; }
+.student-list li {
+  padding: 0.6rem 0.8rem;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;   /* name left, email right */
+  align-items: center;
+}
+.student-list li:hover { background: #edf2f7; }
+.email { color: #718096; font-size: 0.85rem; }
+.status { padding: 1rem; color: #4a5568; }
+.status.error { color: #c53030; }

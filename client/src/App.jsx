@@ -1,25 +1,59 @@
-// App.jsx — the root component of the Student Portal frontend.
-// A component is a function that returns JSX (markup written in JS).
+import { useState, useEffect } from 'react';   // import the two hooks
 import './App.css';
 
 function App() {
-  // Plain JS can run up here, before the return.
-  const title = 'Student Portal';
-  const studentCount = 30;   // hardcoded for now; real data arrives tomorrow
+  // ── STATE: three pieces, one per "situation" a fetch can be in ──
+  const [students, setStudents] = useState([]);      // the data (starts empty)
+  const [loading, setLoading]   = useState(true);    // true until the fetch finishes
+  const [error, setError]       = useState(null);    // holds an error message, if any
 
-  // Everything returned is JSX. It LOOKS like HTML but it's JavaScript.
+  // ── EFFECT: fetch once, after the first render ──
+  useEffect(() => {
+    // We define an async function INSIDE the effect and call it.
+    // (The effect callback itself can't be async — a React rule —
+    //  so this is the standard workaround.)
+    async function fetchStudents() {
+      try {
+        const res = await fetch('http://localhost:3000/api/students');
+        if (!res.ok) {
+          // fetch does NOT throw on 404/500 — you must check res.ok yourself.
+          // (This is THE fetch gotcha; it only throws on network failure.)
+          throw new Error(`Server responded ${res.status}`);
+        }
+        const data = await res.json();   // parse the JSON body
+        setStudents(data);               // store it → triggers a re-render
+      } catch (err) {
+        setError(err.message);           // network down or bad response
+      } finally {
+        setLoading(false);               // runs either way → stop showing "Loading"
+      }
+    }
+    fetchStudents();
+  }, []);   // empty array = run once on mount
+
+  // ── RENDER: handle all THREE states, in order ──
+  if (loading) return <p className="status">Loading students…</p>;
+  if (error)   return <p className="status error">Could not load students: {error}</p>;
+
   return (
     <div className="app">
       <header>
-        <h1>{title}</h1>       {/* {curly braces} embed JS expressions into JSX */}
-        <p>Tracking {studentCount} students and their exam schedules</p>
+        <h1>Student Portal</h1>
+        <p>{students.length} students</p>   {/* real count now, not hardcoded */}
       </header>
 
       <main>
-        <p>Student list coming tomorrow…</p>
+        <ul className="student-list">
+          {students.map((student) => (
+            <li key={student.id}>          {/* key — see the explanation below */}
+              {student.name}
+              <span className="email">{student.email}</span>
+            </li>
+          ))}
+        </ul>
       </main>
     </div>
   );
 }
 
-export default App;   // makes this component importable (main.jsx imports it)
+export default App;
