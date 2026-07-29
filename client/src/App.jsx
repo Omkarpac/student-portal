@@ -1,59 +1,121 @@
-import { useState, useEffect } from 'react';   // import the two hooks
+import { useState, useEffect } from 'react';
 import './App.css';
 
 function App() {
-  // ── STATE: three pieces, one per "situation" a fetch can be in ──
-  const [students, setStudents] = useState([]);      // the data (starts empty)
-  const [loading, setLoading]   = useState(true);    // true until the fetch finishes
-  const [error, setError]       = useState(null);    // holds an error message, if any
+  // ── student list state (yesterday's work) ──
+  const [students, setStudents]   = useState([]);
+  const [listLoading, setListLoading] = useState(true);
+  const [listError, setListError] = useState(null);
 
-  // ── EFFECT: fetch once, after the first render ──
+  // ── NEW: which student is selected, and their subjects ──
+  const [selectedId, setSelectedId] = useState(null);   // null = none selected yet
+  const [detail, setDetail]         = useState(null);   // { student, subjects }
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError]     = useState(null);
+
+  // ── Effect 1: fetch the student list once on mount (unchanged) ──
   useEffect(() => {
-    // We define an async function INSIDE the effect and call it.
-    // (The effect callback itself can't be async — a React rule —
-    //  so this is the standard workaround.)
     async function fetchStudents() {
       try {
         const res = await fetch('http://localhost:3000/api/students');
-        if (!res.ok) {
-          // fetch does NOT throw on 404/500 — you must check res.ok yourself.
-          // (This is THE fetch gotcha; it only throws on network failure.)
-          throw new Error(`Server responded ${res.status}`);
-        }
-        const data = await res.json();   // parse the JSON body
-        setStudents(data);               // store it → triggers a re-render
+        if (!res.ok) throw new Error(`Server responded ${res.status}`);
+        setStudents(await res.json());
       } catch (err) {
-        setError(err.message);           // network down or bad response
+        setListError(err.message);
       } finally {
-        setLoading(false);               // runs either way → stop showing "Loading"
+        setListLoading(false);
       }
     }
     fetchStudents();
-  }, []);   // empty array = run once on mount
+  }, []);
 
-  // ── RENDER: handle all THREE states, in order ──
-  if (loading) return <p className="status">Loading students…</p>;
-  if (error)   return <p className="status error">Could not load students: {error}</p>;
+  // ── Effect 2: NEW — fetch the selected student's subjects ──
+  // Runs whenever selectedId changes (not on mount, because it starts null).
+  useEffect(() => {
+    if (selectedId === null) return;   // nothing selected → do nothing
+
+    async function fetchDetail() {
+      setDetailLoading(true);
+      setDetailError(null);
+      try {
+        const res = await fetch(`http://localhost:3000/api/students/${selectedId}/subjects`);
+        if (!res.ok) throw new Error(`Server responded ${res.status}`);
+        setDetail(await res.json());
+      } catch (err) {
+        setDetailError(err.message);
+      } finally {
+        setDetailLoading(false);
+      }
+    }
+    fetchDetail();
+  }, [selectedId]);   // ← dependency: re-run when the selected student changes
+
+  if (listLoading) return <p className="status">Loading students…</p>;
+  if (listError)   return <p className="status error">Could not load: {listError}</p>;
 
   return (
     <div className="app">
       <header>
         <h1>Student Portal</h1>
-        <p>{students.length} students</p>   {/* real count now, not hardcoded */}
+        <p>{students.length} students</p>
       </header>
 
-      <main>
+      {/* two-panel layout: list on the left, detail on the right */}
+      <main className="layout">
         <ul className="student-list">
           {students.map((student) => (
-            <li key={student.id}>          {/* key — see the explanation below */}
+            <li
+              key={student.id}
+              className={student.id === selectedId ? 'selected' : ''}
+              onClick={() => setSelectedId(student.id)}   
+            >
               {student.name}
-              <span className="email">{student.email}</span>
             </li>
           ))}
         </ul>
+
+        <section className="detail">
+          {selectedId === null && <p className="status">Select a student to see their exams.</p>}
+          {detailLoading && <p className="status">Loading subjects…</p>}
+          {detailError && <p className="status error">Could not load: {detailError}</p>}
+
+          {detail && !detailLoading && (
+            <>
+              <h2>{detail.student.name}</h2>
+              {detail.subjects.length === 0 ? (
+                <p className="status">No subjects enrolled.</p>   /* the empty state */
+              ) : (
+                <table className="exam-table">
+                  <thead>
+                    <tr><th>Code</th><th>Subject</th><th>Exam Date</th><th>Location</th></tr>
+                  </thead>
+                  <tbody>
+                    {detail.subjects.map((sub, i) => (
+                      <tr key={i}>
+                        <td>{sub.subject_code}</td>
+                        <td>{sub.subject_name}</td>
+                        <td>{formatDate(sub.exam_date)}</td>
+                        <td>{sub.location || '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </>
+          )}
+        </section>
       </main>
     </div>
   );
+}
+
+// Helper: turn "2026-05-14T00:00:00.000Z" into "14 May 2026".
+// Handles null (the CS205 LEFT JOIN case) gracefully.
+function formatDate(dateStr) {
+  if (!dateStr) return 'Not scheduled';
+  return new Date(dateStr).toLocaleDateString('en-GB', {
+    day: 'numeric', month: 'short', year: 'numeric'
+  });
 }
 
 export default App;

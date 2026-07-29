@@ -22,3 +22,12 @@ h1 { color: #9fc3fa; margin-bottom: 0.25rem; }
 .email { color: #718096; font-size: 0.85rem; }
 .status { padding: 1rem; color: #4a5568; }
 .status.error { color: #c53030; }
+.layout { display: flex; gap: 1.5rem; align-items: flex-start; }
+.student-list { flex: 0 0 240px; list-style: none; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; }
+.student-list li { padding: 0.6rem 0.8rem; border-bottom: 1px solid #edf2f7; cursor: pointer; }
+.student-list li:hover { background: #edf2f7; }
+.student-list li.selected { background: #2b6cb0; color: white; }   /* highlight the picked one */
+.detail { flex: 1; }
+.exam-table { width: 100%; border-collapse: collapse; }
+.exam-table th, .exam-table td { text-align: left; padding: 0.5rem; border-bottom: 1px solid #e2e8f0; }
+.exam-table th { background: #f7fafc; color: #16325c; }
