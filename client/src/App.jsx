@@ -12,6 +12,7 @@ function App() {
   const [detail, setDetail]         = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError]     = useState(null);
+  const [query, setQuery] = useState('');
 
   useEffect(() => {
     async function fetchStudents() {
@@ -48,18 +49,32 @@ function App() {
 
   if (listLoading) return <p className="status">Loading students…</p>;
   if (listError)   return <p className="status error">Could not load: {listError}</p>;
+  // Derived state: compute the filtered list each render — don't store it.
+  const filteredStudents = students.filter((student) =>
+    student.name.toLowerCase().includes(query.toLowerCase())
+  );
+  console.log('query:', query, '→ matches:', filteredStudents.length);   // ← add this
+  // .toLowerCase() on both sides = case-insensitive match.
+  // .includes() = substring match anywhere in the name.
 
   return (
     <div className="app">
       <header>
         <h1>Student Portal</h1>
         <p>{students.length} students</p>
+          <input
+          className="search"
+          type="text"
+          placeholder="Search students…"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
       </header>
-
+      
       <main className="layout">
         {/* pass DATA down and a CALLBACK down */}
         <StudentList
-          students={students}
+          students={filteredStudents}
           selectedId={selectedId}
           onSelect={setSelectedId}
         />
