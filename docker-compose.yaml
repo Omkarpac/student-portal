@@ -1,0 +1,52 @@
+# docker-compose.yml — the whole Student Portal stack in one file.
+# Run with: docker compose up --build
+
+services:
+  # ── DATABASE ──────────────────────────────────────────────
+  db:
+    image: mysql:8                       # official MySQL image from Docker Hub
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword  # sets the root password on first boot
+      MYSQL_DATABASE: student_portal     # auto-creates this database on first boot
+    ports:
+      - "3307:3306"                      # host 3307 → container 3306, so it doesn't
+                                         # clash with your LOCAL MySQL on 3306
+    volumes:
+      - db_data:/var/lib/mysql           # named volume → data PERSISTS across restarts
+      - ./server/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./server/db/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
+      # ↑ files placed in this special folder run AUTOMATICALLY on first DB init,
+      #   in alphabetical order (01 before 02) → schema then seed. Free setup!
+    healthcheck:                         # lets other services wait until MySQL is truly ready
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-prootpassword"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # ── BACKEND (Node/Express API) ───────────────────────────
+  backend:
+    build: ./server                      # build from server/Dockerfile (Day 2)
+    environment:
+      DB_HOST: db                        # ★ "db" — the service name, resolved by compose DNS
+      DB_PORT: 3306                       # the CONTAINER port (not 3307 — that's host-side)
+      DB_USER: root
+      DB_PASSWORD: rootpassword
+      DB_NAME: student_portal
+      PORT: 3000
+    depends_on:
+      db:
+        condition: service_healthy       # don't start backend until db's healthcheck passes
+    ports:
+      - "3000:3000"                      # expose the API on your host too (handy for testing)
+
+  # ── FRONTEND (React + nginx) ─────────────────────────────
+  frontend:
+    build: ./client                      # build from client/Dockerfile (Day 3)
+    ports:
+      - "8080:80"                        # visit the app at http://localhost:8080
+    depends_on:
+      - backend
+
+# Named volumes are declared here so Docker manages them.
+volumes:
+  db_data:
