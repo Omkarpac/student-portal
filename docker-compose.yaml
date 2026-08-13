@@ -25,7 +25,8 @@ services:
 
   # ── BACKEND (Node/Express API) ───────────────────────────
   backend:
-    build: ./server                      # build from server/Dockerfile (Day 2)
+    image: omkarpacho/student-portal-api:v1
+    #build: ./server                      # build from server/Dockerfile (Day 2)
     environment:
       DB_HOST: db                        # ★ "db" — the service name, resolved by compose DNS
       DB_PORT: 3306                       # the CONTAINER port (not 3307 — that's host-side)
