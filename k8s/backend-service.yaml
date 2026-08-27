@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend              # ★ the stable DNS name — other pods reach it as "backend"
+spec:
+  type: ClusterIP            # internal-only (frontend will reach it inside the cluster)
+  selector:
+    app: backend             # ★ routes to pods with this label (from your Deployment)
+  ports:
+    - port: 3000             # the port the Service listens on
+      targetPort: 3000       # the port on the pod/container to forward to
