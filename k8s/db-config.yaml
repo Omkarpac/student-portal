@@ -1,0 +1,19 @@
+# ── ConfigMap: non-secret DB connection settings ──
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: db-config
+data:
+  DB_HOST: "db"                 # the Service name created for MySQL
+  DB_PORT: "3306"
+  DB_NAME: "student_portal"
+---
+# ── Secret: the sensitive password ──
+apiVersion: v1
+kind: Secret
+metadata:
+  name: db-secret
+type: Opaque
+stringData:                     # stringData lets you write plain text; K8s base64-encodes it for you
+  DB_PASSWORD: "Omkar m p"
+  MYSQL_ROOT_PASSWORD: "Omkar m p"

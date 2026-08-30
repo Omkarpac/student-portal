@@ -17,20 +17,23 @@ spec:
     spec:
       containers:
         - name: backend
-          image: omkarpacho/student-portal-api:v1   # ★ your Day-5 Hub image
+          image: omkarpacho/student-portal-api:v1  
           ports:
             - containerPort: 3000
           env:                                        # config via env vars
             - name: DB_HOST
-              value: "db"                             # placeholder — no DB in-cluster yet (Day 9)
+              valueFrom:
+                configMapKeyRef: { name: db-config, key: DB_HOST }
             - name: DB_PORT
-              value: "3306"
+              valueFrom:
+                configMapKeyRef: { name: db-config, key: DB_PORT }
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef: { name: db-config, key: DB_NAME }
+            - name: DB_USER
+              value: "root"
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: db-secret, key: DB_PASSWORD }
             - name: PORT
               value: "3000"
-          resources:                                  # ★ good practice: bound resource use
-            requests:                                 # what the pod is guaranteed
-              memory: "64Mi"
-              cpu: "50m"                              # 50 millicores = 0.05 CPU
-            limits:                                   # the hard ceiling
-              memory: "128Mi"
-              cpu: "200m"

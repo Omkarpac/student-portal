@@ -1,0 +1,63 @@
+# ── Persistent storage claim ──
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: db-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce            # one node mounts it read-write (fine for a single DB)
+  resources:
+    requests:
+      storage: 1Gi            # request 1 GB of durable storage
+---
+# ── MySQL Deployment ──
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db
+spec:
+  replicas: 1                 # a single DB instance (never blindly scale a DB — stateful!)
+  selector:
+    matchLabels:
+      app: db
+  template:
+    metadata:
+      labels:
+        app: db
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:8
+          ports:
+            - containerPort: 3306
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:                      # ★ pull the password FROM the Secret
+                secretKeyRef:
+                  name: db-secret
+                  key: MYSQL_ROOT_PASSWORD
+            - name: MYSQL_DATABASE
+              valueFrom:                      # ★ pull the DB name FROM the ConfigMap
+                configMapKeyRef:
+                  name: db-config
+                  key: DB_NAME
+          volumeMounts:
+            - name: db-storage
+              mountPath: /var/lib/mysql       # MySQL's data dir → backed by the PVC
+      volumes:
+        - name: db-storage
+          persistentVolumeClaim:
+            claimName: db-pvc
+---
+# ── Service so other pods reach MySQL as "db" ──
+apiVersion: v1
+kind: Service
+metadata:
+  name: db                   
+spec:
+  selector:
+    app: db
+  ports:
+    - port: 3306
+      targetPort: 3306
+  clusterIP: None             # headless service — fine/common for a single stateful pod
